@@ -20,7 +20,6 @@ public sealed class FrontendClientTraceController(
     public async Task<IActionResult> Script()
     {
         if (!options.CurrentValue.Frontend.Enabled) return NotFound();
-        if (!limiter.TryAcquire("bootstrap:" + HttpContext.Connection.RemoteIpAddress, true)) return StatusCode(StatusCodes.Status429TooManyRequests);
         var file = environment.WebRootFileProvider.GetFileInfo("App_Plugins/ClientTrace/frontend.js");
         if (!file.Exists) return NotFound();
         using var reader = new StreamReader(file.CreateReadStream());

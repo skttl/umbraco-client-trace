@@ -209,6 +209,15 @@ public class ServerTests
         settings.Frontend.Enabled=false;
         Assert.Equal(HttpStatusCode.NotFound,(await client.GetAsync("/sub/client-trace/client.js")).StatusCode);
     }
+    [Fact]
+    public async Task BootstrapDeliveryIsUnlimitedAndPreservesTokenBudget()
+    {
+        await using var app=await Host(new ClientTraceOptions()); using var client=app.GetTestClient();
+        for(var n=0;n<12;n++) Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/client-trace/client.js")).StatusCode);
+        for(var n=0;n<10;n++) Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/client-trace/token")).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests,(await client.GetAsync("/client-trace/token")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/client-trace/client.js")).StatusCode);
+    }
     private static async Task<WebApplication> Host(ClientTraceOptions options)
     {
         var builder=WebApplication.CreateBuilder();
