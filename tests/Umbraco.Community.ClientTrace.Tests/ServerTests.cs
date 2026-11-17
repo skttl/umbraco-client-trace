@@ -2,8 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Primitives;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.AspNetCore.Antiforgery;
@@ -77,7 +75,7 @@ public class ServerTests
     }
 
     [Fact]
-    public void HelperOmitsDisabledAndVersionsExternalScriptWithPathBase()
+    public void HelperEmitsVersionedStaticScriptAndOneSafeSettingsObjectWithPathBase()
     {
         var settings=new ClientTraceOptions();
         settings.Frontend.ExcludedScripts=["</script><script>alert('x')</script>"];
@@ -87,7 +85,17 @@ public class ServerTests
         ((HtmlProxy)(object)html).Context=new ViewContext { HttpContext=context };
         using var writer=new StringWriter(); html.AddClientTrace().WriteTo(writer,HtmlEncoder.Default);
         var result=writer.ToString();
-        Assert.Equal("<script src=\"/sub/client-trace/client.js?v=asset123\"></script>",result);
+        Assert.Contains("src=\"/sub/App_Plugins/ClientTrace/frontend.js?v=asset123\"",result);
+        var attribute=System.Text.RegularExpressions.Regex.Match(result,"data-client-trace=\"([^\"]+)\"");
+        Assert.True(attribute.Success);
+        var bootstrap=JsonDocument.Parse(WebUtility.HtmlDecode(attribute.Groups[1].Value)).RootElement;
+        Assert.Equal(4,bootstrap.EnumerateObject().Count());
+        Assert.Equal("/sub/client-trace/token",bootstrap.GetProperty("tokenUrl").GetString());
+        Assert.Equal("/sub/client-trace/reports",bootstrap.GetProperty("reportUrl").GetString());
+        Assert.Equal("/sub/App_Plugins/ClientTrace/",bootstrap.GetProperty("assetBaseUrl").GetString());
+        Assert.Equal(settings.Frontend.ExcludedScripts[0],bootstrap.GetProperty("options").GetProperty("excludedScripts")[0].GetString());
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(result,"data-client-trace="));
+        Assert.Contains("&quot;",result);
         Assert.DoesNotContain("</script><script>",result); Assert.DoesNotContain(" async",result); Assert.DoesNotContain(" defer",result);
         Assert.DoesNotContain("requestToken",result);
         settings.Frontend.Enabled=false;
@@ -188,41 +196,10 @@ public class ServerTests
         for(var n=0;n<10;n++) Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/client-trace/token")).StatusCode);
         Assert.Equal(HttpStatusCode.TooManyRequests,(await client.GetAsync("/client-trace/token")).StatusCode);
     }
-    [Fact]
-    public async Task BootstrapContainsFreshSafeSettingsAndPathBaseWithoutVisitorTokens()
-    {
-        var settings=new ClientTraceOptions(); settings.Frontend.ExcludedScripts=["</script><script>private</script>"];
-        await using var app=await Host(settings); using var client=app.GetTestClient();
-        var response=await client.GetAsync("/sub/client-trace/client.js?v=old");
-        Assert.Equal(HttpStatusCode.OK,response.StatusCode);
-        Assert.Equal("application/javascript",response.Content.Headers.ContentType!.MediaType);
-        Assert.Contains("no-store",response.Headers.CacheControl!.ToString());
-        var source=await response.Content.ReadAsStringAsync();
-        Assert.Contains("function(clientTraceBootstrap)",source);
-        Assert.Contains("\"tokenUrl\":\"/sub/client-trace/token\"",source);
-        Assert.Contains("\"reportUrl\":\"/sub/client-trace/reports\"",source);
-        Assert.Contains("\"assetBaseUrl\":\"/sub/App_Plugins/ClientTrace/\"",source);
-        Assert.DoesNotContain("</script>",source); Assert.Contains("\\u003C",source);
-        Assert.DoesNotContain("requestToken",source); Assert.False(response.Headers.Contains("Set-Cookie"));
-        settings.Frontend.UseSourceMaps=false;
-        Assert.Contains("\"useSourceMaps\":false",await client.GetStringAsync("/sub/client-trace/client.js?v=old"));
-        settings.Frontend.Enabled=false;
-        Assert.Equal(HttpStatusCode.NotFound,(await client.GetAsync("/sub/client-trace/client.js")).StatusCode);
-    }
-    [Fact]
-    public async Task BootstrapDeliveryIsUnlimitedAndPreservesTokenBudget()
-    {
-        await using var app=await Host(new ClientTraceOptions()); using var client=app.GetTestClient();
-        for(var n=0;n<12;n++) Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/client-trace/client.js")).StatusCode);
-        for(var n=0;n<10;n++) Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/client-trace/token")).StatusCode);
-        Assert.Equal(HttpStatusCode.TooManyRequests,(await client.GetAsync("/client-trace/token")).StatusCode);
-        Assert.Equal(HttpStatusCode.OK,(await client.GetAsync("/client-trace/client.js")).StatusCode);
-    }
     private static async Task<WebApplication> Host(ClientTraceOptions options)
     {
         var builder=WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
-        builder.Environment.WebRootFileProvider=new BootstrapFiles();
         builder.Services.AddLogging(); builder.Services.AddAntiforgery();
         builder.Services.AddSingleton<IOptionsMonitor<ClientTraceOptions>>(new FixedOptions(options));
         builder.Services.AddSingleton<ClientTraceRateLimiter>(); builder.Services.AddSingleton<FrontendJavascriptError>();
@@ -236,18 +213,6 @@ public class ServerTests
             Assert.Equal("/sub",pathBase.Value); Assert.Equal("/sub/App_Plugins/ClientTrace/frontend.js",path);
             return path+"?v=asset123";
         }
-    }
-    private class BootstrapFiles:IFileProvider
-    {
-        public IFileInfo GetFileInfo(string path)=>path=="App_Plugins/ClientTrace/frontend.js" ? new BootstrapFile() : new NotFoundFileInfo(path);
-        public IDirectoryContents GetDirectoryContents(string subpath)=>NotFoundDirectoryContents.Singleton;
-        public IChangeToken Watch(string filter)=>NullChangeToken.Singleton;
-    }
-    private class BootstrapFile:IFileInfo
-    {
-        public bool Exists=>true; public long Length=>43; public string? PhysicalPath=>null; public string Name=>"frontend.js";
-        public DateTimeOffset LastModified=>DateTimeOffset.UnixEpoch; public bool IsDirectory=>false;
-        public Stream CreateReadStream()=>new MemoryStream(Encoding.UTF8.GetBytes("window.testBootstrap=clientTraceBootstrap;"));
     }
     public class HtmlProxy:DispatchProxy
     {

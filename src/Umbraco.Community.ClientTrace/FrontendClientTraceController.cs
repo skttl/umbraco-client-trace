@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Asp.Versioning;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -14,25 +12,8 @@ namespace Umbraco.Community.ClientTrace;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class FrontendClientTraceController(
     IOptionsMonitor<ClientTraceOptions> options, IAntiforgery antiforgery,
-    ClientTraceRateLimiter limiter, FrontendJavascriptError logger, IWebHostEnvironment environment) : ControllerBase
+    ClientTraceRateLimiter limiter, FrontendJavascriptError logger) : ControllerBase
 {
-    [HttpGet("client.js")]
-    public async Task<IActionResult> Script()
-    {
-        if (!options.CurrentValue.Frontend.Enabled) return NotFound();
-        var file = environment.WebRootFileProvider.GetFileInfo("App_Plugins/ClientTrace/frontend.js");
-        if (!file.Exists) return NotFound();
-        using var reader = new StreamReader(file.CreateReadStream());
-        var bootstrap = new
-        {
-            Options = options.CurrentValue.Frontend,
-            TokenUrl = HttpContext.Request.PathBase + "/client-trace/token",
-            ReportUrl = HttpContext.Request.PathBase + "/client-trace/reports",
-            AssetBaseUrl = HttpContext.Request.PathBase + "/App_Plugins/ClientTrace/"
-        };
-        var settings = JsonSerializer.Serialize(bootstrap, JsonSerializerOptions.Web);
-        return Content("(function(clientTraceBootstrap){\n" + await reader.ReadToEndAsync() + "\n})(" + settings + ");", "application/javascript; charset=utf-8");
-    }
     [HttpGet("token")]
     public IActionResult Token()
     {

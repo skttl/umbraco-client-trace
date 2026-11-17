@@ -1,0 +1,13 @@
+{
+  "$schema": "../../../../umbraco-package-schema.json",
+  "name": "ClientTrace",
+  "version": "17.0.0-beta.1",
+  "extensions": [
+    {
+      "type": "backofficeEntryPoint",
+      "alias": "ClientTrace.EntryPoint",
+      "name": "ClientTrace entry point",
+      "js": "/App_Plugins/ClientTrace/entrypoint.js"
+    }
+  ]
+}
