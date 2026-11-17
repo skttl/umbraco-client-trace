@@ -23,9 +23,9 @@ export function cleanUrl(value: string, base: string): string {
   try { const url=new URL(value,base); url.search='';url.hash='';url.username='';url.password='';return url.href; } catch { return value.split(/[?#]/)[0]; }
 }
 export function cleanStack(stack: string): string {
-  return stack.replace(/https?:\/\/[^\s)<>"']+/gi, location => {
-    const parts=/^(.*?)(:\d+(?::\d+)?)?$/.exec(location)!;
-    return cleanUrl(parts[1],parts[1])+(parts[2]??'');
+  return stack.replace(/https?:\/\/[^\s<>"']+/gi, location => {
+    const parts=/^(.*?)(:\d+(?::\d+)?)?(\)*)$/.exec(location)!;
+    return cleanUrl(parts[1],parts[1])+(parts[2]??'')+parts[3];
   }).slice(0,8192);
 }
 export function normalize(event: unknown, pageUrl: string): Report | undefined {

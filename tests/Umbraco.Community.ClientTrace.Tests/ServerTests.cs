@@ -74,6 +74,18 @@ public class ServerTests
         Assert.False(ReportSanitizer.TryPrepare(Valid() with { ScriptUrl="javascript:alert(1)" },out _));
     }
 
+    [Theory]
+    [InlineData("at f (https://example.test/app.js?filter=(status)&private=VALUE:10:20)","at f (https://example.test/app.js:10:20)")]
+    [InlineData("f@https://example.test/app.js#filter=(status)&private=VALUE:10:20","f@https://example.test/app.js:10:20")]
+    [InlineData("at f (https://example.test/app(v2).js?filter=(status)&private=VALUE#other=(VALUE):10:20)","at f (https://example.test/app(v2).js:10:20)")]
+    [InlineData("at f (https://user:VALUE@example.test/app.js?filter=(status)&private=VALUE:10:20)","at f (https://example.test/app.js:10:20)")]
+    public void StackUrlsWithParenthesesAreCleanedAtTheServerBoundary(string stack,string expected)
+    {
+        Assert.True(ReportSanitizer.TryPrepare(Valid() with { ScriptUrl="https://user:VALUE@example.test/app.js?private=VALUE",StackTrace=stack,MappedStackTrace=stack },out var report));
+        Assert.Equal("https://example.test/app.js",report.ScriptUrl);
+        Assert.Equal(expected,report.StackTrace); Assert.Equal(expected,report.MappedStackTrace);
+    }
+
     [Fact]
     public void HelperEmitsVersionedStaticScriptAndOneSafeSettingsObjectWithPathBase()
     {

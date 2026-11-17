@@ -11,24 +11,29 @@ const state=()=>window as unknown as Record<symbol,ClientTraceController | undef
 class ClientTraceController extends UmbControllerBase {
   #stop:(()=>void)|undefined;
   #generation=0;
+  #lifecycle=new AbortController();
   constructor(host:UmbControllerHost) {
     super(host);
     this.consumeContext(UMB_AUTH_CONTEXT,context=>{
       this.observe(context?.isAuthorized,authorized=>{
-        const generation=++this.#generation;this.#stop?.();this.#stop=undefined;
+        const generation=++this.#generation;this.#lifecycle.abort();this.#stop?.();this.#stop=undefined;
+        const lifecycle=this.#lifecycle=new AbortController();
         if (!authorized || !context) return;
         const config=context.getOpenApiConfiguration();
         client.setConfig({baseUrl:config.base,credentials:config.credentials,auth:config.token});
-        void getClientTraceConfiguration({signal:AbortSignal.timeout(3000)}).then(({data})=>{
+        void getClientTraceConfiguration({signal:AbortSignal.any([lifecycle.signal,AbortSignal.timeout(3000)])}).then(({data})=>{
           if (generation!==this.#generation || !data?.enabled) return;
-          const report=createReporter(data,body=>postClientTraceReport({body,signal:AbortSignal.timeout(3000)}),window.location.href);
+          const report=createReporter(data,async body=>{
+            if (generation!==this.#generation) return;
+            await postClientTraceReport({body,signal:AbortSignal.any([lifecycle.signal,AbortSignal.timeout(3000)])});
+          },window.location.href);
           this.#stop=listen(window,report);
         }).catch(()=>{});
       },'clientTraceAuthorization');
     });
   }
   override destroy() {
-    ++this.#generation;this.#stop?.();
+    ++this.#generation;this.#lifecycle.abort();this.#stop?.();
     if (state()[key]===this) delete state()[key];
     super.destroy();
   }

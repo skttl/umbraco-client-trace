@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { normalize, excluded, cleanUrl, cleanStack } from './core';
+import { normalize, excluded, cleanUrl, cleanStack, type Report } from './core';
+import { createReporter } from './collector';
 const options = { enabled:true, useSourceMaps:true, excludedPaths:[], excludedScripts:[], excludeUnidentifiedScripts:false };
 const base = 'https://example.test/current?private=1';
 const error = (values:object = {}) => ({ type:'error', message:'failed', filename:'https://cdn.test/app.js?v=123#x', lineno:2, colno:3, error:new TypeError('failed'), ...values });
@@ -12,6 +13,24 @@ describe('normalization and exclusions', () => {
     expect(result.lineNumber).toBe(2);
     expect(cleanUrl(result.scriptUrl!,base)).toBe('https://cdn.test/app.js');
     expect(cleanStack('at run (https://cdn.test/app.js?v=123#x:2:3)')).toBe('at run (https://cdn.test/app.js:2:3)');
+  });
+  it.each([
+    {name:'query parentheses',raw:'at run (https://example.test/app.js?filter=(status)&private=VALUE:10:20)',expected:'at run (https://example.test/app.js:10:20)'},
+    {name:'hash parentheses',raw:'run@https://example.test/app.js#filter=(status)&private=VALUE:10:20',expected:'run@https://example.test/app.js:10:20'},
+    {name:'path and query parentheses',raw:'at run (https://example.test/app(v2).js?filter=(status)&private=VALUE#other=(VALUE):10:20)',expected:'at run (https://example.test/app(v2).js:10:20)'},
+    {name:'userinfo and query',raw:'at run (https://user:VALUE@example.test/app.js?filter=(status)&private=VALUE:10:20)',expected:'at run (https://example.test/app.js:10:20)'},
+  ])('cleans complete stack URL boundaries for $name without losing coordinates',({raw,expected})=>{
+    expect(cleanStack(raw)).toBe(expected);
+  });
+  it('cleans parenthesized query and fragment tails in actual normalized outgoing reports',async()=>{
+    const script='https://example.test/app.js?filter=(status)&private=VALUE#other=(VALUE)';
+    const reason=new Error('failed');reason.stack=`Error: failed\n    at run (${script}:10:20)`;
+    const normalized=normalize(error({filename:script,error:reason}),base)!;
+    let sent:Report|undefined;
+    await createReporter({...options,useSourceMaps:false},async report=>{sent=report;},base)(normalized);
+    expect(sent?.scriptUrl).toBe('https://example.test/app.js');
+    expect(sent?.stackTrace).toBe('Error: failed\n    at run (https://example.test/app.js:10:20)');
+    expect(JSON.stringify(sent)).not.toContain('VALUE');
   });
   it.each(['text',42,true,undefined,null,3n,Symbol('reason')])('describes primitive rejection %s without arbitrary serialization', reason => {
     const result = normalize({type:'unhandledrejection',reason},base)!;

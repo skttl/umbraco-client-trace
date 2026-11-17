@@ -26,7 +26,7 @@ internal static partial class ReportSanitizer
         var clean = cut < 0 ? value : value[..cut];
         if (clean.StartsWith('/') && !clean.StartsWith("//")) return clean;
         return Uri.TryCreate(clean, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https"
-            ? uri.GetLeftPart(UriPartial.Path) : null;
+            ? new UriBuilder(uri) { UserName="", Password="" }.Uri.GetLeftPart(UriPartial.Path) : null;
     }
 
     public static string? ScriptPath(string? value) => value is null ? null :
@@ -39,8 +39,8 @@ internal static partial class ReportSanitizer
         return (CleanUrl(url) ?? url) + position.Value;
     });
 
-    [GeneratedRegex("https?://[^\\s<>\"')]+", RegexOptions.NonBacktracking)]
+    [GeneratedRegex("https?://[^\\s<>\"']+", RegexOptions.NonBacktracking)]
     private static partial Regex StackUrl();
-    [GeneratedRegex(@":\d+(?::\d+)?$", RegexOptions.NonBacktracking)]
+    [GeneratedRegex(@":\d+(?::\d+)?\)*$|\)+$", RegexOptions.NonBacktracking)]
     private static partial Regex Position();
 }
