@@ -92,11 +92,11 @@
 
 **Interfaces:** Consume actual built nupkg, verifier, generated demo template and the full spec.
 
-- [ ] Run npm ci, client tests/build, solution restore/build, server tests and package-project-only Release pack. Inspect package with the shared verifier.
+- [x] Run npm ci, client tests/build, solution restore/build, server tests and package-project-only Release pack. Inspect package with the shared verifier.
 - [ ] Generate a separate clean Umbraco17.0.0 site outside demo using the official template. Install the built nupkg, with no project reference. Start it, check boot and real static manifest/bootstrap/chunk URLs and schema registration.
 - [ ] Verify public frontend helper, token cookie/header flow, rejected missing token and disabled options through browser or meaningful integration checks; verify authenticated backoffice collection through supported local setup when available. No direct database queries and no reading logs without permission.
-- [ ] Create a full-diff review artifact and dispatch a fresh reviewer for spec and quality. One fix wave and scoped re-review handles real findings; unresolved verification limits must be stated accurately.
-- [ ] Create GitHub release environment and set only NUGET_USER=skttl using authenticated tooling when available. Prepare NuGet policy through browser if accessible; otherwise give exact actionable setup and retain this as an explicit outstanding item. Never claim OIDC publishing verified without a successful authorized release.
+- [x] Create a full-diff review artifact and dispatch a fresh reviewer for spec and quality. One fix wave and scoped re-review handles real findings; unresolved verification limits must be stated accurately.
+- [x] Create GitHub release environment and set only NUGET_USER=skttl using authenticated tooling when available. Prepare NuGet policy through browser if accessible; otherwise give exact actionable setup and retain this as an explicit outstanding item. Never claim OIDC publishing verified without a successful authorized release.
 - [ ] Update plan checkboxes and ledger, preserve local checkout/branch. No merge, push, tags or NuGet publication without further authorization. Report completed work, test results, package path and any remaining account setup.
 
 ## Execution authorization
