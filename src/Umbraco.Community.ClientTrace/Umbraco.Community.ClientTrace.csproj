@@ -24,7 +24,7 @@
     <None Include="../../docs/nuget-readme.md" Pack="true" PackagePath="README.md" />
     <None Include="../../icon.png" Pack="true" PackagePath="/" />
     <None Include="../../docs/lucide-license.txt" Pack="true" PackagePath="THIRD-PARTY-NOTICES/LUCIDE-LICENSE.txt" />
-    <None Update="appsettings-schema.Umbraco.Community.ClientTrace.json" Pack="true" PackagePath="/" />
-    <None Update="buildTransitive/Umbraco.Community.ClientTrace.targets" Pack="true" PackagePath="buildTransitive/" />
+    <Content Update="appsettings-schema.Umbraco.Community.ClientTrace.json" Pack="true" PackagePath="/" />
+    <None Update="buildTransitive/Umbraco.Community.ClientTrace.targets" Pack="true" PackagePath="buildTransitive/Umbraco.Community.ClientTrace.targets" />
   </ItemGroup>
 </Project>

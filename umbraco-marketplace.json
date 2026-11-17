@@ -1,0 +1,12 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "Title": "ClientTrace",
+  "Description": "Log uncaught JavaScript errors and unhandled promise rejections from Umbraco 17 backoffice and websites to the existing Umbraco logs.",
+  "Category": "Developer Tools",
+  "LicenseTypes": ["Free"],
+  "PackageType": "Package",
+  "DocumentationUrl": "https://github.com/skttl/umbraco-client-trace/blob/main/docs/nuget-readme.md",
+  "IssueTrackerUrl": "https://github.com/skttl/umbraco-client-trace/issues",
+  "VersionDependencyMode": "SemVer",
+  "Tags": ["javascript", "logging", "errors", "backoffice"]
+}

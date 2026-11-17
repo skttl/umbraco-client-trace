@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, v17/main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 22.21.1
+          cache: npm
+          cache-dependency-path: src/Umbraco.Community.ClientTrace/Client/package-lock.json
+      - uses: actions/setup-dotnet@v6.1.0
+        with:
+          dotnet-version: 10.0.x
+      - name: Validate workflows with checksum-verified actionlint
+        shell: bash
+        run: |
+          curl -fsSLo "$RUNNER_TEMP/actionlint.tar.gz" https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz
+          echo '023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757  '"$RUNNER_TEMP/actionlint.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -shellcheck= -pyflakes= .github/workflows/*.yml
+      - name: Build and test browser clients
+        working-directory: src/Umbraco.Community.ClientTrace/Client
+        run: |
+          npm ci
+          npm test
+          npm run build
+          npm run test:assets
+          npm audit --omit=dev
+      - name: Restore, build and test .NET
+        run: |
+          dotnet restore Umbraco.Community.ClientTrace.slnx
+          dotnet build Umbraco.Community.ClientTrace.slnx -c Release --no-restore
+          dotnet test tests/Umbraco.Community.ClientTrace.Tests/Umbraco.Community.ClientTrace.Tests.csproj -c Release --no-build --no-restore
+      - name: Pack only the package project and inspect the actual ZIP
+        shell: bash
+        run: |
+          version=$(dotnet msbuild src/Umbraco.Community.ClientTrace/Umbraco.Community.ClientTrace.csproj -nologo -getProperty:Version)
+          dotnet pack src/Umbraco.Community.ClientTrace/Umbraco.Community.ClientTrace.csproj -c Release --no-build --no-restore -o artifacts
+          python3 scripts/verify-package.py artifacts/Umbraco.Community.ClientTrace.*.nupkg "$version"
+          python3 scripts/test-verifiers.py
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: nuget-package
+          path: artifacts/*.nupkg
+          if-no-files-found: error

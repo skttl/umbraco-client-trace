@@ -1,6 +1,6 @@
 # ClientTrace designdokument
 
-Dato: 17. november 2026. Status: samlet design til godkendelse før implementeringsplanen. Der er endnu ikke oprettet et softwareprojekt eller skrevet produktkode.
+Dato: 17. november 2026. Status: godkendt design. Implementering og verificering følger [implementeringsplanen](../plans/2026-11-17-clienttrace.md).
 
 ## Formål
 
@@ -202,13 +202,13 @@ Navnet er valgt til trods for kendt navnebrug uden for Umbraco, blandt andet npm
 - Forgrund: fersken `#FFD6AD`.
 - Accentprik: mint `#75F0C1`.
 
-Valgte filer ligger sammen med dokumentet:
+Valgte filer ligger i repositoryet:
 
-- [Ikon som SVG](clienttrace-icons-v2/cobalt-peach.svg).
-- [Ikon som PNG, 512 × 512](clienttrace-icons-v2/cobalt-peach.png).
-- [Lucides licensmeddelelse](clienttrace-icons-v2/LUCIDE-LICENSE.txt).
+- [Ikon som SVG](../../../icon.svg).
+- [Ikon som PNG, 512 × 512](../../../icon.png).
+- [Lucides licensmeddelelse](../../lucide-license.txt).
 
-Absolut placering af dokument og assets er `C:\Users\skttl\Documents\Codex\2026-11-17\jeg-x20-3\outputs`. SVG og PNG er visuelt kontrolleret, også gennem eksempler i 32, 40 og 64 px. De er ikke afprøvet i NuGet eller Umbraco Marketplace.
+Det oprindelige design og ikonarkiv findes i `C:\Users\skttl\Documents\Codex\2026-11-17\jeg-x20-3\outputs`; repositoryets aktive assets er `icon.svg`, `icon.png` og `docs/lucide-license.txt`. SVG og PNG er visuelt kontrolleret, også gennem eksempler i 32, 40 og 64 px. De er ikke afprøvet i NuGet eller Umbraco Marketplace.
 
 ## Verificering før første udgivelse
 
