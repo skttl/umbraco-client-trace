@@ -43,7 +43,9 @@ Frontend aktiveres ved at placere følgende tidligt i `<head>`, før de scripts,
 @Html.AddClientTrace()
 ```
 
-Helperen indlæser opsamleren og nødvendig klientkonfiguration. Den indlejrer ikke besøgendes antiforgery-token i HTML. Nødvendig namespace-import skal dokumenteres og holdes minimal. Kald flere steder på samme side må ikke give dublerede rapporter.
+Helperen skriver et synkront eksternt script-tag til pakkens frontend-bootstrapcontroller. Script-URL'en får versionsbaseret cachebusting svarende til `asp-append-version`, baseret på det faktiske byggede bootstrap-asset. Controlleren returnerer JavaScript med frontendens options, token-URL og report-URL indbygget. Disse oplysninger placeres derfor ikke som særskilte data-attributter på helperens script-tag.
+
+Controllerens svar må ikke caches, så ændret konfiguration slår igennem. De statiske opsamlings- og sourcemap-moduler kan fortsat caches gennem deres versionerede assetnavne eller URL'er. Alle URL'er skal respektere sitets PathBase. Scriptet indeholder ikke besøgendes antiforgery-token og kræver ikke inline eksekverbar JavaScript i HTML. Nødvendig namespace-import skal dokumenteres og holdes minimal. Kald flere steder på samme side må ikke give dublerede rapporter.
 
 Opsamlingen omfatter alle besøgende på de sider, hvor helperen bruges. Implementøren kan selv skrive betingelser omkring helperkaldet. Der tilføjes ikke særlige målgruppe- eller brugerregler i pakken. Ved `Umbraco:Community:ClientTrace:Frontend:Enabled = false` returnerer helperen intet indhold.
 
@@ -87,6 +89,8 @@ Konfigurationen ligger under `Umbraco:Community:ClientTrace` med separate sektio
 De to sektioner har samme indstillinger og standardværdier, men konfigureres uafhængigt. Der er ingen nedarvning af værdier eller regler mellem dem. Serveren håndhæver også hver sektions `Enabled` ved modtagelse af rapporter; det er ikke kun en instruktion til browseren. For eksempel påvirker `Frontend:ExcludedScripts` ikke backofficeopsamlingen.
 
 Der tilføjes ikke indstillinger til logniveau, loggerkategori, token-header, endpointstier eller sourcemap-timeout i første version. Rapportstørrelse, rate limits og gentagelsesbegrænsning får dokumenterede standarder, som fastlægges og afprøves under implementeringen.
+
+Pakken indeholder `appsettings-schema.Umbraco.Community.ClientTrace.json` med beskrivelser og standardværdier for begge sektioner. En medpakket `buildTransitive`-target registrerer schemaet gennem Umbraco 17's `UmbracoJsonSchemaFiles`, så consuming sites får editorunderstøttelse uden manuel schemaregistrering.
 
 ### Matching af udelukkelser
 
@@ -205,6 +209,8 @@ Valgte filer ligger sammen med dokumentet:
 Absolut placering af dokument og assets er `C:\Users\skttl\Documents\Codex\2026-11-17\jeg-x20-3\outputs`. SVG og PNG er visuelt kontrolleret, også gennem eksempler i 32, 40 og 64 px. De er ikke afprøvet i NuGet eller Umbraco Marketplace.
 
 ## Verificering før første udgivelse
+
+Demositet har en side med helperen og et separat demoscript. Én gang pr. sidevisning laver scriptet efter et tilfældigt interval på 3–6 sekunder enten en ufanget JavaScript-fejl eller en uhåndteret promise-rejection. Siden forklarer adfærden og kan genindlæses for at prøve igen. Demoscriptet indgår ikke i NuGet-pakken.
 
 Implementeringsplanen skal dække følgende adfærd med målrettede automatiske checks og relevante browserforsøg:
 
