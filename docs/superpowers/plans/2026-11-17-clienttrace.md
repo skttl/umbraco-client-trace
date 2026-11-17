@@ -78,13 +78,13 @@
 
 **Interfaces:** Consume completed package, client npm scripts and tests, official template command and actual asset names from tasks1/2. Both workflows run same package verifier. GitHub environment `release`, environment secret `NUGET_USER=skttl`; NuGet policy repository owner skttl, repository umbraco-client-trace, workflow filename publish.yml, environment release.
 
-- [ ] Implement package ZIP verification for ID, supplied version, net10.0, interval [17.0.0,18.0.0), DLL, README, icon, manifest/entrypoints/chunks/schema/targets/notices and absence of demo, raw client sources, node_modules, logs, credentials and databases. Include small self-checks for failure paths.
-- [ ] Validate full SemVer stable/prerelease tag with no numeric prerelease leading zero; only strip leading v. Derive expected branch main for 17; require tag version major and project package major/dependency floor to match. Verify tagged commit is ancestor of origin/main with fetched history before publishing.
-- [ ] Create CI on pull requests and main/v17/main with read-only permissions, npm ci/client checks/build, .NET restore/build/tests, package-project-only pack and artifact inspection. Use official current action versions; do not enable unnecessary token permissions.
-- [ ] Create tag-triggered publishing with release environment, contents:read, id-token:write, NuGet/login@v1 and a short-lived output key. Build/test/pack exact tag version and verify before login/push. Do not silently reuse existing NuGet versions.
-- [ ] Validate workflows with pinned actionlint and verify downloaded executable checksum; YAML parsing alone is insufficient. Exercise release validator and package verifier locally.
-- [ ] Document exact install/config/helper usage, all defaults and matching semantics, maps limitations, log field meaning, local build/demo/API generation, minimum compatibility, shared hosting/rate-limit limits and exact trusted publishing settings. Match current Marketplace schema.
-- [ ] Record commands/results in task-3-report.md, check branch, commit intended files. Do not trigger publication, create tags, delete secrets or change remote default branch.
+- [x] Implement package ZIP verification for ID, supplied version, net10.0, interval [17.0.0,18.0.0), DLL, README, icon, manifest/entrypoints/chunks/schema/targets/notices and absence of demo, raw client sources, node_modules, logs, credentials and databases. Include small self-checks for failure paths.
+- [x] Validate full SemVer stable/prerelease tag with no numeric prerelease leading zero; only strip leading v. Derive expected branch main for 17; require tag version major and project package major/dependency floor to match. Verify tagged commit is ancestor of origin/main with fetched history before publishing.
+- [x] Create CI on pull requests and main/v17/main with read-only permissions, npm ci/client checks/build, .NET restore/build/tests, package-project-only pack and artifact inspection. Use official current action versions; do not enable unnecessary token permissions.
+- [x] Create tag-triggered publishing with release environment, contents:read, id-token:write, NuGet/login@v1 and a short-lived output key. Build/test/pack exact tag version and verify before login/push. Do not silently reuse existing NuGet versions.
+- [x] Validate workflows with pinned actionlint and verify downloaded executable checksum; YAML parsing alone is insufficient. Exercise release validator and package verifier locally.
+- [x] Document exact install/config/helper usage, all defaults and matching semantics, maps limitations, log field meaning, local build/demo/API generation, minimum compatibility, shared hosting/rate-limit limits and exact trusted publishing settings. Match current Marketplace schema.
+- [x] Record commands/results in task-3-report.md, check branch, commit intended files. Do not trigger publication, create tags, delete secrets or change remote default branch.
 
 ### Task 4: Installed package verification and final review
 
