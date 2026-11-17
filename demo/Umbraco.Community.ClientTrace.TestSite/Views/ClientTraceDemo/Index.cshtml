@@ -1,0 +1,17 @@
+@using Umbraco.Community.ClientTrace
+@{ Layout = null; }
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ClientTrace demo</title>
+    @Html.AddClientTrace()
+    <script src="~/clienttrace-demo.js" asp-append-version="true" defer></script>
+</head>
+<body>
+    <h1>ClientTrace demo</h1>
+    <p>This template-generated site includes the frontend collector through the Razor helper.</p>
+    <p>A random uncaught error or unhandled rejection occurs once after 3–6 seconds. Inspect Umbraco's Log Viewer and reload this page to repeat.</p>
+</body>
+</html>

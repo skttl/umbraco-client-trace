@@ -1,2 +1,15 @@
 .superpowers/
 work/
+**/bin/
+**/obj/
+**/node_modules/
+src/Umbraco.Community.ClientTrace/wwwroot/
+artifacts/
+**/TestResults/
+**/umbraco/Data/
+**/umbraco/Logs/
+**/wwwroot/media/
+**/appsettings.Development.json
+**/appsettings-schema.json
+.vs/
+*.user

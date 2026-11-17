@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <StaticWebAssetBasePath>App_Plugins/ClientTrace</StaticWebAssetBasePath>
+    <PackageId>Umbraco.Community.ClientTrace</PackageId>
+    <Version>17.0.0-beta.1</Version>
+    <Authors>Søren Kottal</Authors>
+    <Description>Logs browser JavaScript errors to Umbraco's existing structured logs.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/skttl/umbraco-client-trace</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/skttl/umbraco-client-trace</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>umbraco;umbraco-marketplace;javascript;logging</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Client/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Api.Management" Version="[17.0.0,18.0.0)" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <None Include="../../docs/nuget-readme.md" Pack="true" PackagePath="README.md" />
+    <None Include="../../icon.png" Pack="true" PackagePath="/" />
+    <None Include="../../docs/lucide-license.txt" Pack="true" PackagePath="THIRD-PARTY-NOTICES/LUCIDE-LICENSE.txt" />
+    <None Update="appsettings-schema.Umbraco.Community.ClientTrace.json" Pack="true" PackagePath="/" />
+    <None Update="buildTransitive/Umbraco.Community.ClientTrace.targets" Pack="true" PackagePath="buildTransitive/" />
+  </ItemGroup>
+</Project>

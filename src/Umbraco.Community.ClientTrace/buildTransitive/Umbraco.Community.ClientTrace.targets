@@ -1,0 +1,1 @@
+<Project><ItemGroup><UmbracoJsonSchemaFiles Include="$(MSBuildThisFileDirectory)..\appsettings-schema.Umbraco.Community.ClientTrace.json" /></ItemGroup></Project>
