@@ -29,7 +29,7 @@ Første version omfatter ikke `console.error`, andre console-metoder, manuel log
 | JSNLog eller anden generel browser-til-server-logger | Samme grundlæggende transport til eksisterende serverlogs | Kræver stadig en konkret Umbraco-backoffice-integration. Vi har valgt en lille målrettet pakke; der er ikke besluttet en JSNLog-afhængighed. |
 | ClientTrace med backoffice entry point og valgfri Razor-helper | Automatisk backofficeopsamling og minimal frontendopsætning | Valgt. Vi vedligeholder opsamling, transport og validering, men bruger eksisterende logging og relevante biblioteker. |
 
-For sourcemaps er client-side oversættelse valgt frem for server-side filopslag eller uploads. For frontendaktivering er en almindelig Razor-helper valgt frem for tag helper eller automatisk omskrivning af HTML. Almindelig antiforgery er valgt frem for engangskoder og ekstra signaturordninger. Pakkens egne udelukkelsesregler anvendes før afsendelse; Serilog kan fortsat filtrere efter modtagelsen.
+For sourcemaps er client-side oversættelse valgt frem for server-side filopslag eller uploads. For frontendaktivering er en almindelig Razor-helper valgt frem for tag helper eller automatisk omskrivning af HTML. Frontendens JavaScript leveres statisk med settings i HTML; en dynamisk scriptcontroller er fravalgt til fordel for enklere browsercaching. Almindelig antiforgery er valgt frem for engangskoder og ekstra signaturordninger. Pakkens egne udelukkelsesregler anvendes før afsendelse; Serilog kan fortsat filtrere efter modtagelsen.
 
 ## Installation og aktivering
 
@@ -43,9 +43,11 @@ Frontend aktiveres ved at placere følgende tidligt i `<head>`, før de scripts,
 @Html.AddClientTrace()
 ```
 
-Helperen skriver et synkront eksternt script-tag til pakkens frontend-bootstrapcontroller. Script-URL'en får versionsbaseret cachebusting svarende til `asp-append-version`, baseret på det faktiske byggede bootstrap-asset. Controlleren returnerer JavaScript med frontendens options, token-URL og report-URL indbygget. Disse oplysninger placeres derfor ikke som særskilte data-attributter på helperens script-tag.
+Helperen skriver et synkront eksternt script-tag til den statiske `/App_Plugins/ClientTrace/frontend.js`. Script-URL'en får versionsbaseret cachebusting svarende til `asp-append-version`, gennem ASP.NET Cores `IFileVersionProvider` og det faktiske byggede asset.
 
-Controllerens svar må ikke caches, så ændret konfiguration slår igennem. De statiske opsamlings- og sourcemap-moduler kan fortsat caches gennem deres versionerede assetnavne eller URL'er. Alle URL'er skal respektere sitets PathBase. Scriptet indeholder ikke besøgendes antiforgery-token og kræver ikke inline eksekverbar JavaScript i HTML. Nødvendig namespace-import skal dokumenteres og holdes minimal. Kald flere steder på samme side må ikke give dublerede rapporter.
+Ét sikkert HTML-encoded JSON-objekt i script-taggens `data-client-trace`-attribut indeholder `{ options, tokenUrl, reportUrl, assetBaseUrl }`. Scriptet læser objektet via `document.currentScript`, så options og URL'er følger siden, mens selve JavaScript-filen kan caches normalt. Der er ingen controller til levering eller omskrivning af JavaScript og ingen servercache til scriptindhold.
+
+Alle URL'er respekterer sitets PathBase. De øvrige statiske moduler og sourcemap-chunks skal også have korrekt cachebusting ved nye builds. Besøgendes antiforgery-token indgår ikke i HTML, og løsningen kræver ikke inline eksekverbar JavaScript. Nødvendig namespace-import skal dokumenteres og holdes minimal. Kald flere steder på samme side må ikke give dublerede rapporter.
 
 Opsamlingen omfatter alle besøgende på de sider, hvor helperen bruges. Implementøren kan selv skrive betingelser omkring helperkaldet. Der tilføjes ikke særlige målgruppe- eller brugerregler i pakken. Ved `Umbraco:Community:ClientTrace:Frontend:Enabled = false` returnerer helperen intet indhold.
 
