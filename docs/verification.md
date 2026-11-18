@@ -1,10 +1,10 @@
 # ClientTrace verification
 
-Verified locally on 17 November 2026. Package: `Umbraco.Community.ClientTrace` version `17.0.0-beta.1`. Source checkout: `C:/workspaces/umbraco/packages/umbraco-client-trace`, branch `codex/implement-clienttrace`.
+Verified locally on 17 and 18 November 2026. Package: `Umbraco.Community.ClientTrace` version `17.0.0-beta.1`. Source checkout: `C:/workspaces/umbraco/packages/umbraco-client-trace`, branch `codex/implement-clienttrace`.
 
 ## Status
 
-The implementation, package layout and release tooling passed local checks and independent task reviews. A final whole-implementation review found no confirmed Critical or Important source defects. Live CMS/browser acceptance and actual publishing are not verified. This package is prepared for review and those remaining checks, not claimed release-ready.
+The implementation, package layout and release tooling passed local checks and independent task reviews. A final whole-implementation review found no confirmed Critical or Important source defects. Live browser acceptance now passes for frontend and authenticated backoffice errors and rejected promises, including mapped fixture stacks, installed-package delivery and PathBase. Actual publishing remains unverified. Remaining limits are listed below; this is not a blanket release-readiness claim.
 
 ## Local checks
 
@@ -37,7 +37,7 @@ The installed static-web-asset build manifest contains 14 ClientTrace assets und
 25EFD7B2C850B779A48992B4F78E5D5EF52C844F0B1D80880E9F5650FC99C9DA
 ```
 
-This demonstrates installation/build/schema and asset registration, not actual HTTP delivery. No Node installation is needed by a consuming site.
+The subsequent live checks below also verified actual HTTP delivery from this installed package. No Node installation is needed by a consuming site.
 
 ## Review fixes verified
 
@@ -46,25 +46,37 @@ This demonstrates installation/build/schema and asset registration, not actual H
 - Pending backoffice events are discarded across logout, unload and re-login; lifecycle changes abort pending API calls.
 - Inspection of a real NuGet archive found and corrected the schema and MSBuild target package paths. The schema is at the archive root and the target is directly under buildTransitive.
 
-## Remaining acceptance work
+## Live CMS and browser acceptance
 
-Application startup against the two generated local SQLite test databases and reading only ClientTrace test logs await explicit user permission. Automatic approval review rejected the demo restart under the no-database rule; no retry or indirect startup followed that rejection. Apps are currently stopped.
+On 18 November the user explicitly authorized running both named local sites against their own SQLite test databases and reading only their ClientTrace test events. The checked-in CMS 17.8.2 demo and separate PackageReference-only CMS 17.0.0 site started successfully. The minimum site used supported unattended installation with process-only disposable test credentials. No direct database queries or protected runtime configuration reads were used. Both local testsite processes were stopped after browser acceptance completed.
 
-After permission, verify:
+| Check | Observed result |
+|---|---|
+| Installed-package assets | Manifest, six JavaScript entries/chunks and six maps returned200 with correct MIME on 17.0.0 at root and `/clienttrace-test`. The same13 URLs passed on the17.8.2 demo. Maps were served as `text/plain`; JavaScript as `text/javascript`. |
+| Helper and PathBase | `/clienttrace-demo` rendered the synchronous helper and expected `data-client-trace` options. Actual HTTP frontend.js SHA256 base64url matched helper `v=m3nh1DllBCjITeyTKwr4wB9NNWlUrezSvHv95fxlZ_E`. Prefixed asset, token, report and asset-base URLs contained `/clienttrace-test` correctly. |
+| Real antiforgery | Missing-token report400, token issuance200 with no-store, same-cookie/supplied-header report204. Passed on demo and installed site, including the prefixed route. Actual token/cookie values were never printed or saved. |
+| Management authorization | Anonymous configuration requests401 at root and prefixed routes. Actual authenticated browser reports204. |
+| Authenticated backoffice browser | Real uncaught Error and unhandled rejection produced `BackofficeJavascriptError` events with raw and mapped stacks pointing to `backoffice-acceptance.ts`. First pair at08:38:38.9395542Z and08:38:40.3627037Z; repeated pair also passed. |
+| Frontend browser and PathBase | Real uncaught Error and unhandled rejection under HTTPS `/clienttrace-test/clienttrace-demo` produced `FrontendJavascriptError` events with raw and mapped stacks pointing to `frontend-acceptance.ts`, at08:46:44.3101561Z and08:46:45.7385552Z. |
+| Demo without matching map | The checked-in17.8.2 random demo produced an actual browser unhandled rejection with raw stack and no mapped stack, preserving the report when its script had no linked map. |
+| Real Umbraco map availability | Both17.0.0 and17.8.2 exposed `packages/core/entry-point.js` and its linked version3 map through actual backoffice HTTP URLs. The17.8.2 map included mappings and sourcesContent for `src/packages/core/entry-point.ts`. Several app scripts had no linked map and adjacent map URLs404. |
+| Actual Log Viewer | The authenticated Umbraco Log Viewer filtered `StartsWith(SourceContext,'Umbraco.Community.ClientTrace.')` displayed frontend and backoffice error/rejection records and mapped stacks. Expanded backoffice event details were inspected. Full categories were `Umbraco.Community.ClientTrace.BackofficeJavascriptError` and `Umbraco.Community.ClientTrace.FrontendJavascriptError`. |
 
-1. Startup of the PackageReference-only CMS 17.0.0 site.
-2. Actual helper file hash and HTTP delivery/MIME of the manifest, bootstrap and hashed chunks, including a PathBase installation.
-3. Demo uncaught errors and unhandled rejections through a real browser, plus actual authenticated backoffice reporting.
-4. Representative Umbraco sourcemaps fetched and mapped in that browser; exclusions and fallback behavior.
-5. Resulting structured fields and SourceContexts in the actual Log Viewer, and editor use of the installed schema.
+Browser fixtures and diagnostics live only in the ignored temporary consuming site. The package was not modified for these checks. An initial evidence scan incorrectly mixed local and UTC DateTime values and excluded valid events; the marker-only rescan confirmed all records above. That evidence-filter error is resolved and was not a product defect.
 
-Earlier Task1 live checks did prove CMS 17.0.0 and 17.8.2 startup, real management Swagger/operation IDs, anonymous Management rejection and oversized-body rejection. They preceded the final static client integration and are not substituted for the remaining checks above.
+Earlier Task1 checks additionally verified real Management Swagger/operation IDs and oversized-body rejection. Local tests and the live results cover different layers; neither is substituted for the other.
+
+## Remaining acceptance limits
+
+A browser exception thrown inside an Umbraco-owned module has not been mapped end to end. Matching real Umbraco maps were fetched successfully, while end-to-end browser mapping used controlled TypeScript fixtures. Interactive editor autocomplete from the installed schema was not checked; schema packaging, registration and copy were verified separately.
+
+Live browser exclusion combinations and disabled-surface scenarios were not exercised in this run; their local tests remain the evidence for those cases. Publishing and GitHub-hosted CI are also unverified.
 
 ## Dependency and compatibility limits
 
 The package dependency floor remains `[17.0.0,18.0.0)` and compilation/installation against 17.0.0 was verified. That historical runtime and some transitives have known advisories. Use a current supported 17.x patch for deployment; the checked-in demo references 17.8.2.
 
-The updated demo is a deliberate development choice. It could conceal minimum-version regressions if used alone, which is why the separate 17.0.0 installed-package check is retained. Runtime acceptance at that floor is still pending.
+The updated demo is a deliberate development choice. It could conceal minimum-version regressions if used alone, which is why the separate 17.0.0 installed-package check is retained. Runtime browser acceptance at that floor now passes for the cases above.
 
 Public reports can be fabricated. Antiforgery does not establish that an error really happened. URL cleaning and bounded fields do not guarantee that arbitrary free-text errors contain no sensitive data. Early startup, navigation, network failure and blocked cookies can lose reports. Source maps require accessible matching resources. Server rate budgets are per process and resolved remote IP; shared IPs share those budgets.
 
